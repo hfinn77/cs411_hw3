@@ -20,6 +20,17 @@ class Meal:
     difficulty: str
 
     def __post_init__(self):
+
+        """ This function validates the meal.
+
+        Args:
+            self: The meal being validated
+
+        Returns:
+            Nothing. If it doesn't work, it raises an error.
+
+        """
+
         if self.price < 0:
             raise ValueError("Price must be a positive value.")
         if self.difficulty not in ['LOW', 'MED', 'HIGH']:
@@ -27,6 +38,20 @@ class Meal:
 
 
 def create_meal(meal: str, cuisine: str, price: float, difficulty: str) -> None:
+
+    """ This function creates a meal and attempts to add it to meals.
+
+    Args:
+        meal: A string that represents the name of the meal.
+        cuisine: A string that represents the type of cuisine that the meal is.
+        price: A float that represents the price of the meal.
+        difficulty: A string that represents the difficulty of the meal.
+
+    Returns:
+        None. If the input is invalid, then the function will throw an error, otherwise it will add it to meals.
+
+    """
+
     if not isinstance(price, (int, float)) or price <= 0:
         raise ValueError(f"Invalid price: {price}. Price must be a positive number.")
     if difficulty not in ['LOW', 'MED', 'HIGH']:
@@ -53,6 +78,17 @@ def create_meal(meal: str, cuisine: str, price: float, difficulty: str) -> None:
 
 
 def delete_meal(meal_id: int) -> None:
+
+    """ This function attempts to delete a meal based on a meal id.
+
+    Args:
+        meal_id: An int that represents the id of the meal being deleted.
+
+    Returns:
+        None. If the input is invalid, the function will throw an error, otherwise it will delete the meal.
+
+    """
+
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -76,6 +112,17 @@ def delete_meal(meal_id: int) -> None:
         raise e
 
 def get_leaderboard(sort_by: str="wins") -> dict[str, Any]:
+
+    """ This is a getter function that gets the dictionary that represents the leaderboard of meals.
+
+    Args:
+        sort_by: A string that represents the value the elements in the dictionary are to be soerted by, "wins."
+
+    Returns:
+        A dictionary that represents the leaderboard, sorted by wins.
+
+    """
+
     query = """
         SELECT id, meal, cuisine, price, difficulty, battles, wins, (wins * 1.0 / battles) AS win_pct
         FROM meals WHERE deleted = false AND battles > 0
@@ -117,6 +164,18 @@ def get_leaderboard(sort_by: str="wins") -> dict[str, Any]:
         raise e
 
 def get_meal_by_id(meal_id: int) -> Meal:
+
+    """ This is a getter function that gets a meal using a meal_id.
+
+    Args:
+        meal_id: An int that represents the meal_id of the meal we're trying to get.
+
+    Returns:
+        A Meal if it works, raises an error otherwise.
+
+    """
+
+    
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -138,6 +197,17 @@ def get_meal_by_id(meal_id: int) -> Meal:
 
 
 def get_meal_by_name(meal_name: str) -> Meal:
+
+    """ This is a getter function that gets a meal using a meal_name.
+
+    Args:
+        meal_name: An int that represents the meal_name of the meal we're trying to get.
+
+    Returns:
+        A Meal if it works, raises an error otherwise.
+
+    """
+
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -159,6 +229,18 @@ def get_meal_by_name(meal_name: str) -> Meal:
 
 
 def update_meal_stats(meal_id: int, result: str) -> None:
+
+    """ This function updates the stats of a meal after a battle has been run.
+
+    Args:
+        meal_id: An int that represents the id of the meal the function updates.
+        result: A str "win" or "lose" representing whether or not the meal won the battle.
+
+    Returns:
+        Nothing. If it doesn't work, it raises an error.
+
+    """
+
     try:
         with get_db_connection() as conn:
             cursor = conn.cursor()
