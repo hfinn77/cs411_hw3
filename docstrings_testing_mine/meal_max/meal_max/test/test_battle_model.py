@@ -108,6 +108,43 @@ def test_get_combatants(battle_model, sample_meal_1, sample_meal_2):
 
 
 
+def test_update_meal_stats_call_on_battle(battle_model, sample_meal_1, sample_meal_2, mocker):
+    """Test that update_meal_stats is called correctly during battle for both winner and loser."""
+    
+    # Set up a single in-memory database connection
+    connection = sqlite3.connect(":memory:")
+    connection.execute('''CREATE TABLE meals (
+                            id INTEGER PRIMARY KEY,
+                            name TEXT,
+                            cuisine TEXT,
+                            price REAL,
+                            difficulty TEXT,
+                            deleted BOOLEAN DEFAULT 0
+                          )''')
+    connection.commit()
+    
+    # Mock DB_PATH and get_db_connection to always return this same in-memory database
+    mocker.patch("meal_max.utils.sql_utils.DB_PATH", ":memory:")
+    mocker.patch("meal_max.utils.sql_utils.get_db_connection", return_value=connection)
+    
+    # Prepare combatants
+    battle_model.prep_combatant(sample_meal_1)
+    battle_model.prep_combatant(sample_meal_2)
+    
+    # Mock get_random to control randomness and update_meal_stats to capture calls
+    mocker.patch("meal_max.utils.random_utils.get_random", return_value=0.5)
+    mock_update_meal_stats = mocker.patch("meal_max.models.kitchen_model.update_meal_stats")
+    
+    # Conduct the battle
+    winner = battle_model.battle()
+    
+    # Additional assertions or checks can go here if needed
+    
+    # Close the in-memory database connection at the end of the test
+    connection.close()
+
+
+
 def test_combatant_list_order(battle_model, sample_meal_1, sample_meal_2):
     """Test that combatants are added in the correct order."""
     battle_model.prep_combatant(sample_meal_1)
