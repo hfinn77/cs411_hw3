@@ -228,56 +228,41 @@ def get_meal_by_name(meal_name: str) -> Meal:
         raise e
 
 
-# def update_meal_stats(meal_id: int, result: str) -> None:
+def update_meal_stats(meal_id: int, result: str) -> None:
 
-#     """ This function updates the stats of a meal after a battle has been run.
+    """ This function updates the stats of a meal after a battle has been run.
 
-#     Args:
-#         meal_id: An int that represents the id of the meal the function updates.
-#         result: A str "win" or "lose" representing whether or not the meal won the battle.
+    Args:
+        meal_id: An int that represents the id of the meal the function updates.
+        result: A str "win" or "lose" representing whether or not the meal won the battle.
 
-#     Returns:
-#         Nothing. If it doesn't work, it raises an error.
+    Returns:
+        Nothing. If it doesn't work, it raises an error.
 
-#     """
-
-#     try:
-#         with get_db_connection() as conn:
-#             cursor = conn.cursor()
-#             cursor.execute("SELECT deleted FROM meals WHERE id = ?", (meal_id,))
-#             try:
-#                 deleted = cursor.fetchone()[0]
-#                 if deleted:
-#                     logger.info("Meal with ID %s has been deleted", meal_id)
-#                     raise ValueError(f"Meal with ID {meal_id} has been deleted")
-#             except TypeError:
-#                 logger.info("Meal with ID %s not found", meal_id)
-#                 raise ValueError(f"Meal with ID {meal_id} not found")
-
-#             if result == 'win':
-#                 cursor.execute("UPDATE meals SET battles = battles + 1, wins = wins + 1 WHERE id = ?", (meal_id,))
-#             elif result == 'loss':
-#                 cursor.execute("UPDATE meals SET battles = battles + 1 WHERE id = ?", (meal_id,))
-#             else:
-#                 raise ValueError(f"Invalid result: {result}. Expected 'win' or 'loss'.")
-
-#             conn.commit()
-
-#     except sqlite3.Error as e:
-#         logger.error("Database error: %s", str(e))
-#         raise e
-# In meal_max/models/kitchen_model.py
-def update_meal_stats(meal_id: int, result: str, conn=None) -> None:
-    if conn is None:
-        conn = get_db_connection()
+    """
 
     try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT deleted FROM meals WHERE id = ?", (meal_id,))
-        # Perform the rest of the update here...
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT deleted FROM meals WHERE id = ?", (meal_id,))
+            try:
+                deleted = cursor.fetchone()[0]
+                if deleted:
+                    logger.info("Meal with ID %s has been deleted", meal_id)
+                    raise ValueError(f"Meal with ID {meal_id} has been deleted")
+            except TypeError:
+                logger.info("Meal with ID %s not found", meal_id)
+                raise ValueError(f"Meal with ID {meal_id} not found")
+
+            if result == 'win':
+                cursor.execute("UPDATE meals SET battles = battles + 1, wins = wins + 1 WHERE id = ?", (meal_id,))
+            elif result == 'loss':
+                cursor.execute("UPDATE meals SET battles = battles + 1 WHERE id = ?", (meal_id,))
+            else:
+                raise ValueError(f"Invalid result: {result}. Expected 'win' or 'loss'.")
+
+            conn.commit()
+
     except sqlite3.Error as e:
-        # Handle or raise the error
+        logger.error("Database error: %s", str(e))
         raise e
-    finally:
-        if conn and not conn.in_transaction:
-            conn.close()
