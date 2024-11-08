@@ -10,17 +10,14 @@ configure_logger(logger)
 def get_random() -> float:
     """Fetches a random decimal number from random.org.
 
-    This function sends a GET request to random.org to retrieve a random decimal
-    number with two decimal places. If the request is successful, it returns the
-    number as a float. If an error occurs, it logs the error and raises an appropriate
-    exception.
+    Args:
+        None.
 
     Returns:
-        float: A random decimal number between 0 and 1.
+        float: A random decimal number between 0 and 1 with 2 decimal places. If the request is successful, it returns the
+        number as a float. If an error occurs, it logs the error and raises an appropriate
+        exception.
 
-    Raises:
-        ValueError: If the response from random.org is invalid.
-        RuntimeError: If the request to random.org fails or times out.
     """
     url = "https://www.random.org/decimal-fractions/?num=1&dec=2&col=1&format=plain&rnd=new"
 
