@@ -15,25 +15,25 @@ class BattleModel:
     def __init__(self):
         """Initializes the BattleModel with an empty list of combatants.
         
-        Attribute:
-            combatants (List[Meal]): A list of Meal objects representing the combatants
+        Args:
+            self
+
+        Returns:
+            Nothing. Initializes combatants as empty list.
+
         """
         self.combatants: List[Meal] = []
 
     def battle(self) -> str:
         """Conducts a battle between two combatants and determines the winner.
 
-        This method requires exactly two combatants in the combatants list. The
-        winner is determined based on the battle scores and a random factor.
+        Args:
+            self: contains combatants
 
         Returns:
             str: The name of the winning meal.
 
-        Raises:
-            ValueError: If there are fewer than two combatants.
         """
-
-
 
         logger.info("Two meals enter, one meal leaves!")
 
@@ -88,20 +88,27 @@ class BattleModel:
         return winner.meal
 
     def clear_combatants(self):
-        """Initializes the BattleModel with an empty list of combatants."""
+        """Initializes the BattleModel with an empty list of combatants.
+        
+        Args: 
+            self: Contains combatants to be cleared.
+
+        Returns:
+            None.
+        
+        """
         logger.info("Clearing the combatants list.")
         self.combatants.clear()
 
     def get_battle_score(self, combatant: Meal) -> float:
-        """Calculates the battle score for a combatant.
-
-        The score is based on the combatant's price, cuisine length, and a difficulty modifier.
+        """Calculates the battle score for a combatant based on price, cuisine length, and difficulty.
 
         Args:
-            combatant (Meal): The combatant for whom to calculate the score.
+            combatant: a Meal, the combatant for whom to calculate the score.
 
         Returns:
             float: The computed battle score for the combatant.
+        
         """
 
         difficulty_modifier = {"HIGH": 1, "MED": 2, "LOW": 3}
@@ -121,6 +128,8 @@ class BattleModel:
     def get_combatants(self) -> List[Meal]:
         """Retrieves the current list of combatants.
 
+        Args:
+
         Returns:
             List[Meal]: The list of current combatants.
         """
@@ -134,8 +143,8 @@ class BattleModel:
         Args:
             combatant_data (Meal): The combatant to add.
 
-        Raises:
-            ValueError: If the list of combatants already contains two members.
+        Returns:
+            Nothing. Raises a ValueError if the list of combatants already contains two members.
         """
 
         if len(self.combatants) >= 2:

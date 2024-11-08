@@ -3,7 +3,7 @@
 # smoketest.sh - Smoke test for Meal operations
 
 # Define base URL for API endpoints
-BASE_URL="http://localhost:5000/api"
+BASE_URL="http://localhost:5001/api"
 
 # Flag to control JSON output
 ECHO_JSON=false
@@ -36,6 +36,18 @@ check_health() {
   fi
 }
 
+# Function to check the database connection
+check_db() {
+  echo "Checking database connection..."
+  curl -s -X GET "$BASE_URL/db-check" | grep -q '"database_status": "healthy"'
+  if [ $? -eq 0 ]; then
+    echo "Database connection is healthy."
+  else
+    echo "Database check failed."
+    exit 1
+  fi
+}
+
 
 ##########################################################
 #
@@ -44,37 +56,32 @@ check_health() {
 ##########################################################
 
 create_meal() {
-  local meal_name=$1
-  local cuisine=$2
-  local price=$3
-  local difficulty=$4
+  meal=$1
+  cuisine=$2
+  price=$3
+  difficulty=$4
 
-  echo "Creating meal ($meal_name, $cuisine, $price, $difficulty)..."
-  response=$(curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
-    -d "{\"meal\": \"$meal_name\", \"cuisine\": \"$cuisine\", \"price\": $price, \"difficulty\": \"$difficulty\"}")
+  echo "Adding meal ($meal, $cuisine, $price, $difficulty) to the database..."
+  curl -s -X POST "$BASE_URL/create-meal" -H "Content-Type: application/json" \
+  -d "{\"meal\":\"$meal\", \"cuisine\":\"$cuisine\", \"price\":$price, \"difficulty\":\"$difficulty\"}" | grep -q '"status": "combatant added"'
 
-  if echo "$response" | grep -q '"status": "combatant added"'; then
-    echo "Meal created successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Response JSON:"
-      echo "$response" | jq .
-    fi
+  if [ $? -eq 0 ]; then
+    echo "Meal added successfully."
   else
-    echo "Failed to create meal."
+    echo "Failed to add meal."
     exit 1
   fi
 }
 
 delete_meal() {
-  local meal_id=$1
+  meal_id=$1
 
-  echo "Deleting meal with ID ($meal_id)..."
+  echo "Deleting meal by ID ($meal_id)..."
   response=$(curl -s -X DELETE "$BASE_URL/delete-meal/$meal_id")
-
   if echo "$response" | grep -q '"status": "meal deleted"'; then
-    echo "Meal deleted successfully."
+    echo "Meal deleted successfully by ID ($meal_id)."
   else
-    echo "Failed to delete meal."
+    echo "Failed to delete meal by ID ($meal_id)."
     exit 1
   fi
 }
@@ -82,61 +89,49 @@ delete_meal() {
 get_meal_by_id() {
   meal_id=$1
 
-  echo "Retrieving meal by ID ($meal_id)..."
+  echo "Getting meal by ID ($meal_id)..."
   response=$(curl -s -X GET "$BASE_URL/get-meal-by-id/$meal_id")
-
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Meal retrieved successfully."
+    echo "Meal retrieved successfully by ID ($meal_id)."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Meal JSON:"
+      echo "Meal JSON (ID $meal_id):"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to retrieve meal by ID."
+    echo "Failed to get meal by ID ($meal_id)."
     exit 1
   fi
 }
 
 get_meal_by_name() {
-  local meal_name=$1
+  meal=$1
 
-  echo "Retrieving meal by name ($meal_name)..."
-  response=$(curl -s -X GET "$BASE_URL/get-meal-by-name/$meal_name")
-
+  echo "Getting meal by name (Meal: '$meal')..."
+  mll=$(echo $meal | sed 's/ /%20/g')
+  response=$(curl -s -X GET "$BASE_URL/get-meal-by-name/$mll")
   if echo "$response" | grep -q '"status": "success"'; then
-    echo "Meal retrieved successfully."
+    echo "Meal retrieved successfully by name."
     if [ "$ECHO_JSON" = true ]; then
-      echo "Meal JSON:"
+      echo "Meal JSON (by name):"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to retrieve meal by name."
+    echo "Failed to get meal by name."
     exit 1
   fi
 }
 
-get_leaderboard() {
-
-  echo "Retrieving leaderboard sorted by wins..."
-  response=$(curl -s -X GET "$BASE_URL/leaderboard")
-
-  if echo "$response" | grep -q '"status": "success"'; then
-    echo "Leaderboard retrieved successfully."
-    if [ "$ECHO_JSON" = true ]; then
-      echo "Leaderboard JSON:"
-      echo "$response" | jq .
-    fi
-  else
-    echo "Failed to retrieve leaderboard."
-    exit 1
-  fi
-}
+##########################################################
+#
+# Battle Management Functions
+#
+##########################################################
 
 prep_combatant() {
 
-  local meal_name=$1
-  local cuisine=$2
-  local price=$3
+  meal_name=$1
+  cuisine=$2
+  price=$3
 
   echo "Preparing combatant ($meal_name)..."
 
@@ -145,15 +140,15 @@ prep_combatant() {
   
 
   if echo "$response" | grep -q '"status": "combatant prepared"'; then
-    if ["$ECHO_JSON" = true]; then
-      echo "Combatant JSON (meal $meal_name):"
+    echo "Meal prepared successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Meal JSON:"
       echo "$response" | jq .
     fi
   else
-    echo "Failed to prepare combatant."
+    echo "Failed to prepare meal for battle."
     exit 1
   fi
-
 }
 
 battle() {
@@ -182,6 +177,39 @@ clear_combatants() {
 
 }
 
+##########################################################
+#
+# Leaderboard
+#
+##########################################################
+
+get_leaderboard() {
+
+  if [ $# -eq 0 ]; then
+    param="wins"
+  else
+    param=$1
+  fi
+
+  echo "Retrieving leaderboard sorted by $param..."
+
+  response=$(curl -s -X GET "$BASE_URL/leaderboard" -H "Content-Type: application/json" \
+    -d "{\"sort_by\": \"$param\"}")
+
+  echo "$response"
+
+  if echo "$response" | grep -q '"status": "success"'; then
+    echo "Leaderboard retrieved successfully."
+    if [ "$ECHO_JSON" = true ]; then
+      echo "Leaderboard JSON:"
+      echo "$response" | jq .
+    fi
+  else
+    echo "Failed to retrieve leaderboard."
+    exit 1
+  fi
+}
+
 
 
 
@@ -196,10 +224,13 @@ clear_combatants() {
 
 # Health check
 check_health
+check_db
 
 # Create meals
 create_meal "Spaghetti" "Italian" 12.5 "MED"
 create_meal "Sushi" "Japanese" 15.0 "HIGH"
+create_meal "Pizza" "Italian" 3.0 "MED"
+create_meal "Fries" "France" 4.0 "LOW"
 
 # Prep compatant
 prep_combatant "Spaghetti" "Italian" 12.5
@@ -213,12 +244,18 @@ get_meal_by_name "Spaghetti"
 # Battle
 battle 
 
+# Clear combatants 
+clear_combatants
+
+# Another battle
+prep_combatant "Pizza" "Italian" 3.0
+prep_combatant "Sushi" "Japanese" 15.0
+
+battle 
+
 # Retrieve leaderboard
 get_leaderboard "wins"
 get_leaderboard "win_pct"
-
-# Clear combatants 
-clear_combatants
 
 # Delete meal
 delete_meal 1
