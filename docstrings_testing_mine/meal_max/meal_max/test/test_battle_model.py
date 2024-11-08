@@ -3,11 +3,13 @@ from unittest.mock import MagicMock
 import sqlite3
 from unittest.mock import patch
 
-
 from meal_max.models.battle_model import BattleModel
+
 from meal_max.models.kitchen_model import Meal
 from meal_max.utils.random_utils import get_random
 
+import os
+DATABASE_PATH = os.path.abspath("db/meal_max.db")
 
 @pytest.fixture()
 def battle_model():
@@ -96,6 +98,13 @@ def test_battle_score_calculation(battle_model, sample_meal_1):
     expected_score = (sample_meal_1.price * len(sample_meal_1.cuisine)) - 1  # HIGH difficulty has modifier of 1
     assert score == expected_score
 
+def test_get_battle_score_with_invalid_difficulty(battle_model, sample_meal1):
+    """Test calculating battle score with an invalid difficulty."""
+    sample_meal1.difficulty = "INVALID"
+
+    with pytest.raises(KeyError):
+        battle_model.get_battle_score(sample_meal1)
+
 
 def test_get_combatants(battle_model, sample_meal_1, sample_meal_2):
     """Test retrieving the current list of combatants."""
@@ -142,8 +151,6 @@ def test_update_meal_stats_call_on_battle(battle_model, sample_meal_1, sample_me
     
     # Close the in-memory database connection at the end of the test
     connection.close()
-
-
 
 def test_combatant_list_order(battle_model, sample_meal_1, sample_meal_2):
     """Test that combatants are added in the correct order."""
